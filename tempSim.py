@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 import time
 import random
 import http.client
@@ -32,7 +33,7 @@ while True:
     headers = {'Content-type': 'application/json'}
     
     data = {
-        "timestamp": time.time() * 1000, 
+        "timestamp": datetime.now(timezone.utc).isoformat(), 
         "room": "Bedroom",
         "temperature": tempSim()
     }
@@ -40,7 +41,7 @@ while True:
     json_data = json.dumps(data)
     
     try:
-        conn.request("POST", "/sensors/_doc/", json_data, headers)
+        conn.request("POST", "/sensors-v2/_doc/", json_data, headers)
         response = conn.getresponse()
         response.read()
         if response.status in [200, 201]:
