@@ -1,0 +1,109 @@
+# services:
+#   tempSim:
+#     build: .
+#     image: python:3.8-slim
+#     container_name: temperature-simulator
+#     working_dir: /app
+#     command: ["python", "tempSim.py"]
+#     depends_on:
+#       - opensearch
+#     networks:
+#       - opensearch-net
+
+#   opensearch:
+#     image: opensearchproject/opensearch:2.18.0
+#     container_name: opensearch
+#     environment:
+#       discovery.type: single-node
+#       bootstrap.memory_lock: "true"
+#       OPENSEARCH_JAVA_OPTS: "-Xms512m -Xmx512m"
+#       OPENSEARCH_INITIAL_ADMIN_PASSWORD: "P1erd@l3P0L!cJE"
+#     ulimits:
+#       memlock:
+#         soft: -1
+#         hard: -1
+#       nofile:
+#         soft: 65536  # maximum number of open files for the OpenSearch user, set to at least 65536 on modern systems
+#         hard: 65536
+#     ports:
+#       - "9200:9200"
+#       - "9600:9600"
+#     volumes:
+#       - opensearch-data:/usr/share/opensearch/data
+#     networks:
+#       - opensearch-net
+
+#   opensearch-dashboards:
+#     image: opensearchproject/opensearch-dashboards:2.18.0
+#     container_name: opensearch-dashboards
+#     ports:
+#       - "5601:5601"
+#     expose:
+#       - "5601"
+#     environment:
+#       OPENSEARCH_HOSTS: "https://opensearch:9200"
+#     depends_on:
+#       - opensearch
+#     networks:
+#       - opensearch-net
+
+# volumes:
+#   opensearch-data:
+
+# networks:
+#   opensearch-net:
+#     driver: bridge
+
+services:
+  tempsim:
+    build: .
+    container_name: temperature-simulator
+    environment:
+      - OPENSEARCH_HOST=opensearch
+      - OPENSEARCH_PORT=9200
+    depends_on:
+      - opensearch
+    networks:
+      - opensearch-net
+
+  opensearch:
+    image: opensearchproject/opensearch:2.11.0
+    container_name: opensearch
+    environment:
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "DISABLE_SECURITY_PLUGIN=true" 
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    networks:
+      - opensearch-net
+
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.11.0
+    container_name: opensearch-dashboards
+    ports:
+      - "5601:5601"
+    environment:
+      - 'OPENSEARCH_HOSTS=["http://opensearch:9200"]'
+      - "DISABLE_SECURITY_DASHBOARDS_PLUGIN=true"
+    depends_on:
+      - opensearch
+    networks:
+      - opensearch-net
+
+volumes:
+  opensearch-data:
+
+networks:
+  opensearch-net:
+    driver: bridge
